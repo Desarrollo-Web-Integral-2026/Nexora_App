@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import useAuthStore from '../store/authStore'
 
 interface RefreshResponse {
