@@ -63,10 +63,13 @@ function Home() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#6C3FC5] to-[#E040FB] text-white font-semibold hover:shadow-lg hover:shadow-[#6C3FC5]/25 transition-all duration-300 flex items-center gap-2 group">
+            <Link
+              to="/register"
+              className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#6C3FC5] to-[#E040FB] text-white font-semibold hover:shadow-lg hover:shadow-[#6C3FC5]/25 transition-all duration-300 flex items-center gap-2 group"
+            >
               Crear cuenta
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
             <button className="px-8 py-3.5 rounded-xl border border-white/10 bg-white/5 text-gray-300 font-semibold hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2">
               Explorar comunidad
             </button>
