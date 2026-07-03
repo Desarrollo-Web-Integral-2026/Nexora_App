@@ -4,8 +4,30 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
+const { connectPostgres } = require('./config/db.postgres')
+const { connectMongo } = require('./config/db.mongo')
+const { runCleanupJobs } = require('./jobs/cleanup.job')
+
+// Conexiones a bases de datos
+connectPostgres()
+connectMongo()
+
+// Job de limpieza automática cada 24 horas
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
+setInterval(async () => {
+  await runCleanupJobs()
+}, TWENTY_FOUR_HOURS)
+
+// Correr una vez al iniciar en producción
+if (process.env.NODE_ENV === 'production') {
+  runCleanupJobs()
+}
 
 const app = express()
+
+// Conexiones a base de datos
+connectPostgres()
+connectMongo()
 
 // Seguridad HTTP headers
 app.use(helmet())
@@ -35,6 +57,15 @@ app.get('/health', (req, res) => {
         message: 'Nexora API corriendo',
         timestamp: new Date().toISOString(),
     })
+})
+
+app.get('/api/data-policy', (req, res) => {
+  const { getAllPolicies } = require('./config/dataPolicy')
+  res.status(200).json({
+    success: true,
+    message: 'Política de retención de datos de Nexora',
+    data: getAllPolicies(),
+  })
 })
 
 // Ruta no econtrada
