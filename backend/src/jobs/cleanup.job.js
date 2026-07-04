@@ -1,5 +1,5 @@
 
-const { getPool } = require('../config/db.postgres')
+const { getPool } = require('../config/db.mysql')
 const mongoose = require('mongoose')
 const { getPolicy } = require('../config/dataPolicy')
 
