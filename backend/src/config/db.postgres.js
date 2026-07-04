@@ -1,38 +1,40 @@
-const { Pool } = require('pg')
+const { Sequelize } = require('sequelize')
 
-let pool = null
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+    logging: false,
+    define: {
+      schema: 'public',
+      timestamps: true,
+      underscored: true,
+    },
+  }
+)
 
-const getPool = () => {
-    if (!pool) {
-        pool = new Pool ({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            database: process.env.DB_NAME,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            ssl: false,
-            max: 10,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-        })
+const connectPostgres = async () => {
+  try {
+    await sequelize.authenticate()
+    console.log('[PostgreSQL] Conexión exitosa a filess.io')
 
-        pool.on('error', (err) => {
-            console.error('[PostgreSQL] Error inesperado:', err.message)
-        })
-    }
-
-    return pool
+    // Sincroniza los modelos con la BD automáticamente
+    await sequelize.sync({ alter: true })
+    console.log('[PostgreSQL] Modelos sincronizados')
+  } catch (err) {
+    console.error('[PostgreSQL] Error de conexión:', err.message)
+    process.exit(1)
+  }
 }
 
-const connectPostgres = async() => {
-    try {
-        const client = await getPool().connect()
-        console.log('[PostgreSQL] Conexión exitosa a filess.io')
-        client.release()
-    } catch (err) {
-        console.error('[PostgreSQL] Error de conexión: ', err.message)
-        process.exit(1)
-    }
-}
-
-module.exports = { getPool, connectPostgres }
+module.exports = { sequelize, connectPostgres }
