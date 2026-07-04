@@ -4,13 +4,10 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
-const { connectPostgres } = require('./config/db.postgres')
 const { connectMongo } = require('./config/db.mongo')
 const { runCleanupJobs } = require('./jobs/cleanup.job')
-
-// Conexiones a bases de datos
-connectPostgres()
-connectMongo()
+const authRoutes = require('./modules/auth/auth.routes')
+const { connectMySQL } = require('./config/db.mysql')
 
 // Job de limpieza automática cada 24 horas
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
@@ -26,7 +23,7 @@ if (process.env.NODE_ENV === 'production') {
 const app = express()
 
 // Conexiones a base de datos
-connectPostgres()
+connectMySQL()
 connectMongo()
 
 // Seguridad HTTP headers
@@ -67,6 +64,9 @@ app.get('/api/data-policy', (req, res) => {
     data: getAllPolicies(),
   })
 })
+
+// Rutas
+app.use('/api/auth', authRoutes)
 
 // Ruta no econtrada
 app.use((req, res) => {
