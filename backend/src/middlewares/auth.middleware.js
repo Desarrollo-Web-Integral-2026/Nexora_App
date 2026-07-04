@@ -1,5 +1,5 @@
 const jwt =     require('jsonwebtoken');
-const { error} = required('../utils/response.js');
+const { error} = require('../utils/response.js');
 
 // Verifica que el token JWT sea valido
 const verifyToken = (req, res, next) => {
@@ -38,4 +38,4 @@ const verifyRole = (...roles) => {
     }
 } 
 
-module.export = { verifyToken, verifyRole }
+module.exports = { verifyToken, verifyRole }

@@ -27,7 +27,8 @@
     "mongoose": "^9.7.3",
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
-    "pg": "^8.22.0",
+    "mysql2": "^3.22.5",
+    "sequelize": "^6.37.8",
     "uuid": "^14.0.1"
   },
   "devDependencies": {
