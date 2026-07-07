@@ -8,6 +8,7 @@ const { connectMongo } = require('./config/db.mongo')
 const { runCleanupJobs } = require('./jobs/cleanup.job')
 const authRoutes = require('./modules/auth/auth.routes')
 const { connectMySQL } = require('./config/db.mysql')
+const arcoRoutes = require('./modules/arco/arco.routes')
 
 // Job de limpieza automática cada 24 horas
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
@@ -67,6 +68,7 @@ app.get('/api/data-policy', (req, res) => {
 
 // Rutas
 app.use('/api/auth', authRoutes)
+app.use('/api/arco', arcoRoutes)
 
 // Ruta no econtrada
 app.use((req, res) => {

@@ -47,6 +47,10 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  opone_uso_secundario: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   status: {
     type: DataTypes.ENUM('active', 'inactive', 'cancelled'),
     defaultValue: 'active',
