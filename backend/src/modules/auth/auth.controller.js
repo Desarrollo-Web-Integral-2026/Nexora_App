@@ -40,6 +40,8 @@ const register = async (req, res) => {
 }
 
 const login = async (req, res) => {
+  const ip = req.ip || req.headers['x-forwarded-for']
+
   try {
     const { correo, password } = req.body
 
@@ -48,6 +50,18 @@ const login = async (req, res) => {
     }
 
     const { accessToken, refreshToken, user } = await authService.login({ correo, password })
+
+    // Criterio 9 — log de login exitoso con IP y timestamp (via created_at)
+    await auditService.log({
+      userId: user.id,
+      accion: 'LOGIN_SUCCESS',
+      entidad: 'users',
+      entidadId: user.id,
+      endpoint: req.originalUrl,
+      metodo: req.method,
+      ip,
+      exitoso: true,
+    })
 
     // Refresh token en cookie HttpOnly
     res.cookie('refresh_token', refreshToken, {
@@ -59,6 +73,20 @@ const login = async (req, res) => {
 
     return success(res, { accessToken, user }, 'Login exitoso')
   } catch (err) {
+    // Criterio 9 — log de intento fallido con IP y timestamp
+    await auditService.log({
+      accion: 'LOGIN_FAILED',
+      entidad: 'users',
+      endpoint: req.originalUrl,
+      metodo: req.method,
+      ip,
+      exitoso: false,
+      detalle: err.message,
+    })
+
+    // Alerta si hay patrón de fuerza bruta desde esta IP (no bloquea la respuesta)
+    auditService.checkSuspiciousActivity(ip)
+
     return error(res, err.message, err.status || 500)
   }
 }
@@ -79,6 +107,17 @@ const logout = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refresh_token
     await authService.logout(refreshToken)
+
+    // Criterio 9/10 — log de cierre de sesión (invalidación de tokens)
+    await auditService.log({
+      userId: req.user?.id || null,
+      accion: 'LOGOUT',
+      entidad: 'users',
+      endpoint: req.originalUrl,
+      metodo: req.method,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      exitoso: true,
+    })
 
     res.clearCookie('refresh_token')
     return success(res, null, 'Sesión cerrada correctamente')
