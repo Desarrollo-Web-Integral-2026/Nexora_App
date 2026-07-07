@@ -9,6 +9,7 @@ const { runCleanupJobs } = require('./jobs/cleanup.job')
 const authRoutes = require('./modules/auth/auth.routes')
 const { connectMySQL } = require('./config/db.mysql')
 const arcoRoutes = require('./modules/arco/arco.routes')
+const { connectCloudinary } = require('./config/cloudinary')
 
 // Job de limpieza automática cada 24 horas
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
@@ -26,6 +27,7 @@ const app = express()
 // Conexiones a base de datos
 connectMySQL()
 connectMongo()
+connectCloudinary()
 
 // Seguridad HTTP headers
 app.use(helmet())

@@ -38,8 +38,24 @@ const SECTIONS = [
   },
 
   {
+  id: 'terceros',
+  title: '4. Transferencia de Datos a Terceros',
+  content: `Nexora utiliza los siguientes servicios externos para su operación:
+
+- Cloudinary (cloudinary.com)
+  - Datos transferidos: archivos multimedia (imágenes, ilustraciones y productos digitales)
+  - Finalidad: almacenamiento, entrega y protección de contenido multimedia
+  - Canal: HTTPS con autenticación segura mediante API keys
+  - Retención: hasta que el usuario elimine el archivo o cancele su cuenta
+
+Ningún dato personal como nombre, correo o contraseña es transferido a servicios externos.
+
+Las transferencias de archivos multimedia solo ocurren cuando el usuario ha aceptado explícitamente este aviso de privacidad. Al subir cualquier archivo a la plataforma confirmas que has leído y aceptado que dicho contenido será almacenado en Cloudinary.`,
+},
+
+  {
     id: 'seguridad',
-    title: '4. Seguridad de la Información',
+    title: '5. Seguridad de la Información',
     content: `El acceso a la plataforma está protegido mediante autenticación basada en JWT (JSON Web Tokens), y los archivos multimedia se almacenan y distribuyen a través de servicios especializados con control de acceso estricto.
 
 No se comparte información personal con terceros sin tu consentimiento, salvo obligación legal expresa.`,
@@ -47,7 +63,7 @@ No se comparte información personal con terceros sin tu consentimiento, salvo o
 
   {
     id: 'arco',
-    title: '5. Derechos ARCO',
+    title: '6. Derechos ARCO',
     content: `Como titular de tus datos, tienes derecho a Acceder, Rectificar, Cancelar u Oponerte al tratamiento de tu información personal en cualquier momento.
 
 Para ejercer estos derechos envía tu solicitud a:
