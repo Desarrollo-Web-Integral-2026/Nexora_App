@@ -1,97 +1,94 @@
-const { getPool } = require('../../config/db.mysql')
+const User = require('../../models/user.model')
+const Session = require('../../models/session.model')
+const PasswordReset = require('../../models/passwordReset.model')
 
+// Criterio 10 — Sequelize usa parámetros, protege contra inyección SQL
 const createUser = async ({ nombre, apellido, correo, password, rol, fechaAceptacion }) => {
-  const pool = getPool()
-  const result = await pool.query(
-    `INSERT INTO users 
-      (nombre, apellido, correo, password, rol, acepta_privacidad, fecha_aceptacion, status, created_at)
-     VALUES ($1, $2, $3, $4, $5, true, $6, 'active', NOW())
-     RETURNING id, nombre, apellido, correo, rol, created_at`,
-    [nombre, apellido, correo, password, rol, fechaAceptacion]
-  )
-  return result.rows[0]
+  return await User.create({
+    nombre: nombre.trim(),
+    apellido: apellido.trim(),
+    correo: correo.toLowerCase().trim(),
+    password,
+    rol,
+    acepta_privacidad: true,
+    fecha_aceptacion: fechaAceptacion,
+    status: 'active',
+  })
 }
 
 const findUserByEmail = async (correo) => {
-  const pool = getPool()
-  const result = await pool.query(
-    `SELECT id, nombre, apellido, correo, password, rol, status
-     FROM users WHERE correo = $1`,
-    [correo]
-  )
-  return result.rows[0] || null
+  return await User.findOne({
+    where: { correo: correo.toLowerCase().trim() },
+  })
 }
 
 const findUserById = async (id) => {
-  const pool = getPool()
-  const result = await pool.query(
-    `SELECT id, nombre, apellido, correo, rol, status, avatar_url, descripcion
-     FROM users WHERE id = $1`,
-    [id]
-  )
-  return result.rows[0] || null
+  return await User.findOne({
+    where: { id },
+    attributes: { exclude: ['password'] },
+  })
 }
 
-const saveRefreshToken = async (userId, token, expiresAt) => {
-  const pool = getPool()
-  await pool.query(
-    `INSERT INTO sessions (user_id, refresh_token, expires_at, created_at)
-     VALUES ($1, $2, $3, NOW())`,
-    [userId, token, expiresAt]
-  )
-}
-
-const findRefreshToken = async (token) => {
-  const pool = getPool()
-  const result = await pool.query(
-    `SELECT * FROM sessions WHERE refresh_token = $1 AND expires_at > NOW()`,
-    [token]
-  )
-  return result.rows[0] || null
-}
-
-const deleteRefreshToken = async (token) => {
-  const pool = getPool()
-  await pool.query(
-    `DELETE FROM sessions WHERE refresh_token = $1`,
-    [token]
-  )
+const findPasswordByUserId = async (userId) => {
+  return await User.findOne({
+    where: { id: userId },
+    attributes: ['id', 'password'],
+  })
 }
 
 const updatePassword = async (userId, newPassword) => {
-  const pool = getPool()
-  await pool.query(
-    `UPDATE users SET password = $1 WHERE id = $2`,
-    [newPassword, userId]
+  await User.update(
+    { password: newPassword },
+    { where: { id: userId } }
   )
+}
+
+const updateLastLogin = async (userId) => {
+  await User.update(
+    { last_login: new Date() },
+    { where: { id: userId } }
+  )
+}
+
+const saveRefreshToken = async (userId, token, expiresAt) => {
+  await Session.create({
+    user_id: userId,
+    refresh_token: token,
+    expires_at: expiresAt,
+  })
+}
+
+const findRefreshToken = async (token) => {
+  return await Session.findOne({
+    where: { refresh_token: token },
+  })
+}
+
+const deleteRefreshToken = async (token) => {
+  await Session.destroy({
+    where: { refresh_token: token },
+  })
 }
 
 const savePasswordResetToken = async (userId, token, expiresAt) => {
-  const pool = getPool()
-  await pool.query(
-    `INSERT INTO password_resets (user_id, token, expires_at, created_at)
-     VALUES ($1, $2, $3, NOW())
-     ON CONFLICT (user_id) DO UPDATE 
-     SET token = $2, expires_at = $3, created_at = NOW()`,
-    [userId, token, expiresAt]
-  )
+  await PasswordReset.upsert({
+    user_id: userId,
+    token,
+    expires_at: expiresAt,
+    used: false,
+  })
 }
 
 const findPasswordResetToken = async (token) => {
-  const pool = getPool()
-  const result = await pool.query(
-    `SELECT * FROM password_resets 
-     WHERE token = $1 AND expires_at > NOW() AND used = false`,
-    [token]
-  )
-  return result.rows[0] || null
+  return await PasswordReset.findOne({
+    where: { token, used: false },
+  })
 }
 
 const markResetTokenAsUsed = async (token) => {
-  const pool = getPool()
-  await pool.query(
-    `UPDATE password_resets SET used = true WHERE token = $1`,
-    [token]
+  await PasswordReset.update(
+    { used: true },
+    { where: { token } }
   )
 }
 
@@ -99,10 +96,12 @@ module.exports = {
   createUser,
   findUserByEmail,
   findUserById,
+  findPasswordByUserId,
+  updatePassword,
+  updateLastLogin,
   saveRefreshToken,
   findRefreshToken,
   deleteRefreshToken,
-  updatePassword,
   savePasswordResetToken,
   findPasswordResetToken,
   markResetTokenAsUsed,
