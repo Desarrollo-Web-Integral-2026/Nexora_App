@@ -1,20 +1,40 @@
 const authService = require('./auth.service')
+const auditService = require('../audit/audit.service')
 const { success, error } = require('../../utils/response')
 
 const register = async (req, res) => {
   try {
-    const { nombre, apellido, correo, password, rol, fechaAceptacion } = req.body
-
-    if (!nombre || !apellido || !correo || !password || !rol || !fechaAceptacion) {
-      return error(res, 'Todos los campos son obligatorios', 400)
-    }
+    const { nombre, apellido, correo, password, rol, fechaAceptacion, aceptaPrivacidad } = req.body
 
     const user = await authService.register({
-      nombre, apellido, correo, password, rol, fechaAceptacion,
+      nombre, apellido, correo, password, rol, fechaAceptacion, aceptaPrivacidad
     })
 
-    return success(res, user, 'Usuario registrado correctamente', 201)
+    // Criterio 9 — log de registro exitoso
+    await auditService.log({
+      userId: user.id,
+      accion: 'REGISTER',
+      entidad: 'users',
+      entidadId: user.id,
+      endpoint: req.originalUrl,
+      metodo: req.method,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      exitoso: true,
+    })
+
+    return success(res, { id: user.id, correo: user.correo, rol: user.rol }, 'Usuario registrado correctamente', 201)
   } catch (err) {
+    // Criterio 9 — log de registro fallido
+    await auditService.log({
+      accion: 'REGISTER',
+      entidad: 'users',
+      endpoint: req.originalUrl,
+      metodo: req.method,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      exitoso: false,
+      detalle: err.message,
+    })
+
     return error(res, err.message, err.status || 500)
   }
 }
