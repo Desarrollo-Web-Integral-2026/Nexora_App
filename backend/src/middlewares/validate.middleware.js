@@ -79,4 +79,31 @@ const validateLogin = [
   handleValidationErrors,
 ]
 
-module.exports = { validateRegister, validateLogin, handleValidationErrors }
+// Criterios 2, 3, 8 — validación y sanitización del perfil
+// El correo NO se incluye aquí a propósito: aunque lo envíen, el
+// service lo ignora explícitamente (criterio 3), así que ni siquiera lo validamos.
+const validateProfileUpdate = [
+  body('nombre')
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ min: 2, max: 50 }).withMessage('El nombre debe tener entre 2 y 50 caracteres')
+    .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/).withMessage('El nombre solo puede contener letras'),
+
+  body('apellido')
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ min: 2, max: 50 }).withMessage('El apellido debe tener entre 2 y 50 caracteres')
+    .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/).withMessage('El apellido solo puede contener letras'),
+
+  body('descripcion')
+    .optional({ nullable: true })
+    .trim()
+    .escape()
+    .isLength({ max: 300 }).withMessage('La descripción no puede exceder 300 caracteres'),
+
+  handleValidationErrors,
+]
+
+module.exports = { validateRegister, validateLogin, validateProfileUpdate, handleValidationErrors }
