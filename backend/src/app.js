@@ -10,6 +10,7 @@ const authRoutes = require('./modules/auth/auth.routes')
 const { connectMySQL } = require('./config/db.mysql')
 const arcoRoutes = require('./modules/arco/arco.routes')
 const { connectCloudinary } = require('./config/cloudinary')
+const userRoutes = require('./modules/user/user.routes')
 
 // Job de limpieza automática cada 24 horas
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
@@ -71,6 +72,7 @@ app.get('/api/data-policy', (req, res) => {
 // Rutas
 app.use('/api/auth', authRoutes)
 app.use('/api/arco', arcoRoutes)
+app.use('/api/profile', userRoutes)
 
 // Ruta no econtrada
 app.use((req, res) => {
