@@ -1,15 +1,29 @@
 // src/pages/Register.tsx
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { registerSchema, type RegisterFormData } from '../schemas/authSchemas'
 import FormInput from '../components/ui/FormInput'
+import api from '../service/api'
+import Toast, { type ToastData } from '../components/ui/Toast'
+
+interface RegisterResponse {
+  success: boolean
+  message: string
+  data: {
+    id: string
+    correo: string
+    rol: 'artist' | 'client'
+  }
+}
 
 function Register() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [toast, setToast] = useState<ToastData | null>(null)
 
   const {
     register,
@@ -20,7 +34,6 @@ function Register() {
   })
 
   const onSubmit = async (data: RegisterFormData) => {
-    // Sanitizar antes de enviar
     const payload = {
       nombre: data.nombre.trim(),
       apellido: data.apellido.trim(),
@@ -31,8 +44,13 @@ function Register() {
       fechaAceptacion: new Date().toISOString(),
     }
 
-    console.log('Payload sanitizado:', payload)
-    // TODO: llamar a api.post('/auth/register', payload)
+    try {
+      await api.post<RegisterResponse>('/auth/register', payload)
+      setToast({ type: 'success', message: 'Cuenta creada correctamente. Ahora inicia sesión.' })
+      setTimeout(() => navigate('/login'), 1500)
+    } catch {
+      setToast({ type: 'error', message: 'No se pudo crear la cuenta. Verifica tus datos e intenta de nuevo.' })
+    }
   }
 
   return (
@@ -222,6 +240,8 @@ function Register() {
           </form>
         </div>
       </div>
+
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>
   )
 }
