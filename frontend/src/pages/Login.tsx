@@ -1,13 +1,36 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { loginSchema, type LoginFormData } from '../schemas/authSchemas'
 import FormInput from '../components/ui/FormInput'
+import api from '../service/api'
+import useAuthStore from '../store/authStore'
+import Toast, { type ToastData } from '../components/ui/Toast'
+
+interface LoginResponse {
+  success: boolean
+  message: string
+  data: {
+    accessToken: string
+    user: {
+      id: string
+      nombre: string
+      apellido: string
+      correo: string
+      rol: 'artist' | 'client'
+      avatar_url?: string | null
+      descripcion?: string | null
+    }
+  }
+}
 
 function Login() {
+  const navigate = useNavigate()
+  const setAuth = useAuthStore((state) => state.setAuth)
   const [showPassword, setShowPassword] = useState(false)
+  const [toast, setToast] = useState<ToastData | null>(null)
 
   const {
     register,
@@ -23,8 +46,17 @@ function Login() {
       password: data.password,
     }
 
-    console.log('Payload sanitizado:', payload)
-    // TODO: llamar a api.post('/auth/login', payload)
+    try {
+      const { data: response } = await api.post<LoginResponse>('/auth/login', payload)
+      console.log('Respuesta del login:', response) 
+      const { accessToken, user } = response.data
+
+      setAuth(accessToken, user)
+      navigate('/profile')
+    } catch (err) {
+      console.error('Error en login:', err)
+      setToast({ type: 'error', message: 'Correo o contraseña incorrectos. Intenta de nuevo.' })
+    }
   }
 
   return (
@@ -117,6 +149,8 @@ function Login() {
           </form>
         </div>
       </div>
+
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>
   )
 }
